@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wealth Ledger — Mutual Fund Return Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE8D9;
+    --paper-alt:#E4DEC9;
+    --ink:#1B2A4A;
+    --ink-soft:#3C4A66;
+    --ledger-green:#1F5F4D;
+    --margin-red:#B5423F;
+    --gold:#B8842E;
+    --gold-soft:#DDBB7A;
+    --line:rgba(27,42,74,0.16);
+    --shadow:0 10px 30px rgba(27,42,74,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(var(--paper) 0px, var(--paper) 33px, var(--line) 34px),
+      var(--paper);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .sheet{
+    max-width:760px;
+    margin:0 auto;
+    position:relative;
+    padding-left:34px;
+  }
+  .margin-rule{
+    position:absolute;
+    left:14px;
+    top:0;
+    bottom:0;
+    width:2px;
+    background:var(--margin-red);
+    opacity:0.55;
+  }
+  .margin-rule::before{
+    content:'';
+    position:absolute;
+    left:-3px; top:-3px;
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--margin-red);
+  }
+  header{
+    padding:6px 0 20px 10px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ledger-green);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Source Serif 4',serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .prepared-by-main{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    color:var(--ledger-green);
+    margin:0 0 10px;
+    line-height:1.6;
+  }
+  header p{
+    margin:0;
+    font-size:14.5px;
+    color:var(--ink-soft);
+    max-width:52ch;
+    line-height:1.5;
+  }
+  .cta-btn{
+    display:inline-block;
+    margin-top:14px;
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    text-decoration:none;
+    color:#fff;
+    background:var(--margin-red);
+    border:1.5px solid var(--ink);
+    padding:10px 18px;
+    border-radius:2px;
+    box-shadow:2px 2px 0 var(--ink);
+    transition:transform 0.12s, box-shadow 0.12s;
+  }
+  .cta-btn:hover{
+    transform:translate(-1px,-1px);
+    box-shadow:3px 3px 0 var(--ink);
+  }
+  .cta-btn:active{
+    transform:translate(1px,1px);
+    box-shadow:1px 1px 0 var(--ink);
+  }
+  .tabs{
+    display:flex;
+    gap:0;
+    margin:0 0 22px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .tab{
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:none;
+    border:none;
+    padding:10px 16px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    position:relative;
+    top:1px;
+  }
+  .tab.active{
+    color:var(--ink);
+    font-weight:700;
+    border-bottom:2px solid var(--margin-red);
+  }
+  .card{
+    background:var(--paper-alt);
+    border:1px solid var(--line);
+    border-radius:2px;
+    box-shadow:var(--shadow);
+    margin:0 0 24px 10px;
+    padding:26px 26px 22px;
+  }
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+    margin-bottom:6px;
+  }
+  @media(min-width:600px){
+    .field-row{grid-template-columns:1fr 1fr;}
+  }
+  .field{
+    margin-bottom:16px;
+  }
+  .field label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:8px;
+  }
+  .field label .val{
+    font-family:'Space Mono',monospace;
+    color:var(--ledger-green);
+    font-weight:700;
+    font-size:13.5px;
+    letter-spacing:0;
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:2px;
+    background:var(--ink);
+    opacity:0.35;
+    outline:none;
+    margin:10px 0 4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--margin-red);
+    border:2px solid var(--paper);
+    box-shadow:0 0 0 1px var(--margin-red);
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--margin-red);
+    border:2px solid var(--paper);
+    cursor:pointer;
+  }
+  .num-input{
+    width:100%;
+    font-family:'Space Mono',monospace;
+    font-size:15px;
+    padding:9px 10px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:2px;
+    color:var(--ink);
+  }
+  .num-input:focus{outline:2px solid var(--gold); outline-offset:1px;}
+
+  .stamp-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0;
+    margin:26px 10px 0;
+    border:1.5px solid var(--ink);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .stamp{
+    padding:18px 14px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    background:var(--paper);
+  }
+  .stamp:last-child{border-right:none;}
+  .stamp .label{
+    font-family:'Space Mono',monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .stamp .amount{
+    font-family:'Source Serif 4',serif;
+    font-weight:700;
+    font-size:22px;
+    color:var(--ink);
+    transition:opacity 0.2s;
+  }
+  .stamp.highlight{
+    background:var(--ink);
+  }
+  .stamp.highlight .label{color:var(--gold-soft);}
+  .stamp.highlight .amount{color:#fff;}
+
+  .chart-wrap{
+    margin:22px 10px 0;
+    padding:20px 20px 10px;
+    background:var(--paper-alt);
+    border:1px solid var(--line);
+    border-radius:2px;
+  }
+  .chart-wrap .cap{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  svg{display:block; width:100%; height:auto;}
+  .legend{
+    display:flex;
+    gap:18px;
+    margin-top:8px;
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .goal-result{
+    margin-top:16px;
+    padding:16px 18px;
+    background:var(--paper);
+    border-left:3px solid var(--margin-red);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .goal-result b{font-family:'Space Mono',monospace; color:var(--ledger-green);}
+
+  footer{
+    margin:30px 0 0 10px;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  select.num-input{
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%235B6472' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 10px center;
+    background-size:10px 7px;
+    padding-right:26px;
+    cursor:pointer;
+  }
+
+  /* ===== Embedded Goal Calculator (scoped to .goal-passbook-embed) ===== */
+  .goal-passbook-embed{
+    --gc-bg:#F2F1EC; --gc-card:#FFFFFF; --gc-ink:#132845; --gc-ink-soft:#5B6472;
+    --gc-line:#D9D4C3; --gc-gold:#B4870B; --gc-green:#1F6E52; --gc-green-bg:#EAF3EE; --gc-stamp:#132845;
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--gc-ink);
+    display:flex;
+    justify-content:center;
+    padding:10px 0 4px;
+  }
+  .goal-passbook-embed .passbook{
+    width:100%;
+    max-width:560px;
+    background:var(--gc-card);
+    border-radius:4px;
+    box-shadow:0 1px 2px rgba(19,40,69,0.06), 0 12px 32px rgba(19,40,69,0.10);
+    overflow:hidden;
+    position:relative;
+  }
+  .goal-passbook-embed .perforation{
+    height:14px;
+    background-image: radial-gradient(circle at 10px 7px, var(--gc-bg) 5px, transparent 5.5px);
+    background-size: 20px 14px;
+    background-repeat: repeat-x;
+  }
+  .goal-passbook-embed header{
+    padding:28px 32px 20px;
+    border-bottom:1px solid var(--gc-line);
+  }
+  .goal-passbook-embed .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gc-gold);
+    margin:0 0 6px;
+  }
+  .goal-passbook-embed h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:-.01em;
+  }
+  .goal-passbook-embed .prepared-by{
+    font-size:12px;
+    color:var(--gc-ink-soft);
+    margin:0 0 10px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .goal-passbook-embed .sub{
+    font-size:13.5px;
+    color:var(--gc-ink-soft);
+    margin:0;
+  }
+  .goal-passbook-embed .body{padding:24px 32px 32px;}
+  .goal-passbook-embed .step{display:none;}
+  .goal-passbook-embed .step.active{display:block;}
+  .goal-passbook-embed .field{margin-bottom:18px;}
+  .goal-passbook-embed label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--gc-ink);
+    margin-bottom:6px;
+    letter-spacing:.01em;
+    text-transform:none;
+  }
+  .goal-passbook-embed input,
+  .goal-passbook-embed select{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--gc-line);
+    border-radius:3px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14.5px;
+    color:var(--gc-ink);
+    background:#FBFAF7;
+    transition:border-color .15s;
+  }
+  .goal-passbook-embed input:focus,
+  .goal-passbook-embed select:focus{
+    outline:none;
+    border-color:var(--gc-stamp);
+    background:#fff;
+  }
+  .goal-passbook-embed .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .goal-passbook-embed .goal-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:4px;
+  }
+  .goal-passbook-embed .goal-card{
+    border:1px solid var(--gc-line);
+    border-radius:3px;
+    padding:14px 10px;
+    text-align:center;
+    cursor:pointer;
+    background:#FBFAF7;
+    transition:all .15s;
+  }
+  .goal-passbook-embed .goal-card:hover{border-color:var(--gc-stamp);}
+  .goal-passbook-embed .goal-card.selected{
+    border-color:var(--gc-stamp);
+    background:var(--gc-stamp);
+    color:#fff;
+  }
+  .goal-passbook-embed .goal-card .icon{font-size:20px; display:block; margin-bottom:6px;}
+  .goal-passbook-embed .goal-card .label{font-size:12px; font-weight:600; text-transform:none; letter-spacing:normal;}
+  .goal-passbook-embed .hint{font-size:12px; color:var(--gc-ink-soft); margin-top:4px;}
+  .goal-passbook-embed .btn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:3px;
+    background:var(--gc-stamp);
+    color:#fff;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    margin-top:6px;
+    transition:background .15s;
+  }
+  .goal-passbook-embed .btn:hover{background:#0D1D33;}
+  .goal-passbook-embed .btn.ghost{
+    background:transparent;
+    color:var(--gc-ink-soft);
+    border:1px solid var(--gc-line);
+    margin-top:10px;
+  }
+  .goal-passbook-embed .btn.ghost:hover{background:#F5F4EF; color:var(--gc-ink);}
+  .goal-passbook-embed .btn-row{display:flex; gap:10px;}
+  .goal-passbook-embed .btn-row .btn{margin-top:6px;}
+  .goal-passbook-embed .entry{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:11px 0;
+    border-bottom:1px dashed var(--gc-line);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .goal-passbook-embed .entry:last-child{border-bottom:none;}
+  .goal-passbook-embed .entry .k{font-size:12.5px; color:var(--gc-ink-soft); font-family:'IBM Plex Sans', sans-serif;}
+  .goal-passbook-embed .entry .v{font-size:15px; font-weight:600; color:var(--gc-ink);}
+  .goal-passbook-embed .entry.highlight{
+    background:var(--gc-green-bg);
+    margin:6px -14px 0;
+    padding:14px 14px;
+    border-radius:3px;
+    border-bottom:none;
+  }
+  .goal-passbook-embed .entry.highlight .v{color:var(--gc-green); font-size:18px;}
+  .goal-passbook-embed .stamp-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    color:var(--gc-gold);
+    border:1px solid var(--gc-gold);
+    border-radius:2px;
+    padding:3px 8px;
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .goal-passbook-embed .result-name{
+    font-family:'Fraunces', serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 2px;
+  }
+  .goal-passbook-embed .result-sub{font-size:12.5px; color:var(--gc-ink-soft); margin:0 0 18px;}
+  .goal-passbook-embed .placeholder-note{
+    font-size:13.5px;
+    color:var(--gc-ink-soft);
+    line-height:1.6;
+    background:#FBFAF7;
+    border:1px solid var(--gc-line);
+    border-radius:3px;
+    padding:16px;
+  }
+  .goal-passbook-embed .btn.outline{
+    background:#fff;
+    color:var(--gc-stamp);
+    border:1px solid var(--gc-stamp);
+  }
+  .goal-passbook-embed .btn.outline:hover{background:#F5F4EF;}
+
+  /* ===== Income & Expenditure tab ===== */
+  .ie-section-title{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ledger-green);
+    margin:22px 0 6px;
+    padding-bottom:5px;
+    border-bottom:1px solid var(--line);
+  }
+  .ie-section-title.first{margin-top:2px;}
+  .ie-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:6px 0;
+  }
+  .ie-row label{
+    font-size:13px;
+    color:var(--ink);
+    font-weight:500;
+    flex:1;
+  }
+  .ie-row .ie-input-wrap{
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .ie-row .ie-prefix{
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .ie-row input{
+    width:95px;
+    font-family:'Space Mono',monospace;
+    font-size:13.5px;
+    padding:7px 8px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:2px;
+    color:var(--ink);
+    text-align:right;
+  }
+  .ie-freq-mini{
+    display:flex;
+    gap:6px;
+    margin-left:4px;
+  }
+  .ie-freq-mini label{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .ie-freq-mini input[type=radio]{
+    width:12px; height:12px;
+    accent-color:var(--margin-red);
+    cursor:pointer;
+    margin:0;
+  }
+  .ie-proj-title{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ledger-green);
+    margin:22px 0 6px;
+    padding-bottom:5px;
+    border-bottom:1px solid var(--line);
+  }
+  .ie-proj-note{font-size:11.5px; color:var(--ink-soft); margin:6px 0 0; line-height:1.5;}
+  .ie-warning{
+    background:#FDECEC;
+    border:1px solid #E0A6A6;
+    border-left:4px solid var(--margin-red);
+    color:#7A2323;
+    font-size:13px;
+    line-height:1.5;
+    padding:12px 14px;
+    border-radius:2px;
+    margin-top:12px;
+  }
+  .ie-warning b{color:#5C1414;}
+  .ie-proj-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+  }
+  .ie-proj-table th, .ie-proj-table td{
+    border:1px solid var(--line);
+    padding:8px 10px;
+    text-align:right;
+  }
+  .ie-proj-table th:first-child, .ie-proj-table td:first-child{text-align:left;}
+  .ie-proj-table th{
+    background:var(--ink);
+    color:#fff;
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:10.5px;
+    letter-spacing:0.04em;
+  }
+  .ie-proj-total-row td{
+    background:var(--gold-soft);
+    color:var(--ink);
+    font-weight:700;
+  }
+  .ie-row input:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  .ie-row input.ie-inv-ret{width:55px;}
+  .wa-cta-box{
+    margin-top:18px;
+    padding:18px 18px 16px;
+    background:var(--paper);
+    border:1.5px solid var(--ink);
+    border-radius:2px;
+    box-shadow:2px 2px 0 var(--ink);
+  }
+  .wa-cta-title{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 12px;
+    text-align:center;
+    letter-spacing:0.02em;
+  }
+  .wa-cta-buttons{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  @media(min-width:480px){
+    .wa-cta-buttons{flex-direction:row;}
+  }
+  .wa-btn{
+    flex:1;
+    display:block;
+    text-align:center;
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    text-decoration:none;
+    color:#fff;
+    padding:12px 14px;
+    border-radius:2px;
+    border:1.5px solid var(--ink);
+    box-shadow:2px 2px 0 var(--ink);
+    transition:transform 0.12s, box-shadow 0.12s;
+  }
+  .wa-btn:hover{transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--ink);}
+  .wa-btn:active{transform:translate(1px,1px); box-shadow:1px 1px 0 var(--ink);}
+  .wa-btn-sip{background:var(--ledger-green);}
+  .wa-btn-lumpsum{background:var(--margin-red);}
+
+  @media(max-width:560px){
+    .ie-row{
+      flex-direction:column;
+      align-items:stretch;
+      gap:8px;
+      padding:10px 0;
+      border-bottom:1px dashed var(--line);
+    }
+    .ie-row label{
+      flex:none;
+      font-size:12.5px;
+      line-height:1.4;
+    }
+    .ie-row .ie-input-wrap{
+      width:100%;
+      justify-content:flex-start;
+    }
+    .ie-row .ie-input-wrap input{
+      flex:1 1 auto;
+      width:auto;
+      min-width:0;
+    }
+    .ie-row .ie-input-wrap input.ie-inv-ret{
+      flex:0 0 56px;
+    }
+    .ie-row .ie-freq-mini{
+      flex:none;
+      margin-left:auto;
+    }
+  }
+  .ie-pct-row{
+    display:flex;
+    justify-content:space-between;
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    padding:6px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .ie-pct-row b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="margin-rule"></div>
+  <header>
+    <h1>VJ Wealth's Ledger</h1>
+    <p class="prepared-by-main">by Venkatakrishnan Krishnaswamy, QPFP&reg;</p>
+    <p>Work out what a SIP, a lumpsum, or a savings goal actually adds up to — before you commit a rupee.</p>
+    <a class="cta-btn" href="https://zfrmz.in/QYgqK0DchN7Mme3pyIda" target="_blank" rel="noopener">Book a call with me →</a>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="incomeexp">MonthlyBudget</button>
+    <button class="tab" data-tab="shopbudget">ShopBudget</button>
+  </div>
+
+  <!-- INCOME & EXPENDITURE PANEL -->
+  <div class="card panel active" id="panel-incomeexp">
+
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 16px;">Enter each figure, then mark it as <b>M</b>onthly or <b>A</b>nnual — mix and match as needed.</p>
+
+    <div class="ie-section-title first">Your Details</div>
+    <div class="field-row">
+      <div class="field">
+        <label for="ie-user-name">Your Name</label>
+        <input type="text" class="num-input" id="ie-user-name" placeholder="">
+      </div>
+      <div class="field">
+        <label for="ie-user-age">Your Current Age</label>
+        <input type="number" class="num-input" id="ie-user-age" placeholder="" min="1" max="99">
+      </div>
+      <div class="field">
+        <label for="ie-user-retage">Your Retirement Age</label>
+        <input type="number" class="num-input" id="ie-user-retage" placeholder="60" min="2" max="100" value="60">
+      </div>
+    </div>
+    <p style="font-size:11.5px; color:var(--ink-soft); margin:-4px 0 16px;">Your name personalises the PDF report title; your current age and retirement age are used for the retirement projection below.</p>
+
+    <div class="ie-section-title">Income</div>
+    <div class="ie-row"><label for="ie-inc-salary">Salary Income (Husband + Wife)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inc-salary" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-inc-salary" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-inc-salary" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-inc-bonus">Annual Bonus (Husband + Wife)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inc-bonus" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-inc-bonus" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-inc-bonus" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-inc-business">Business Income</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inc-business" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-inc-business" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-inc-business" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-inc-rental">Rental Income</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inc-rental" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-inc-rental" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-inc-rental" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-inc-investment">Investment Income</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inc-investment" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-inc-investment" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-inc-investment" value="annual">A</label></span></div></div>
+
+    <div class="ie-section-title">Household Expenses</div>
+    <div class="ie-row"><label for="ie-hh-rent">House Rent</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-rent" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-rent" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-rent" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-maint">House - Society, Maintenance, Repair</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-maint" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-maint" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-maint" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-food">Food, Grocery & Toiletaries</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-food" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-food" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-food" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-vehicle">Vehicle - Fuel, Maintenance / Travels</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-vehicle" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-vehicle" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-vehicle" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-medical">Medicines / Doctor / Healthcare</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-medical" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-medical" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-medical" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-utilities">Electricity / Water / AMCs</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-utilities" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-utilities" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-utilities" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-help">Domestic Help / Car Driver</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-help" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-help" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-help" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-comm">Mobile / Telephone / Internet</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-comm" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-comm" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-comm" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-subs">TV Cable / Newspapers / Subscriptions</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-subs" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-subs" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-subs" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-hh-other">Others if any</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-hh-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-hh-other" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-hh-other" value="annual">A</label></span></div></div>
+
+    <div class="ie-section-title">Lifestyle Expenses</div>
+    <div class="ie-row"><label for="ie-ls-clothes">Clothes & Accessories</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-clothes" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-clothes" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-clothes" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-shopping">Shopping, Gifts, Electronics, Gadgets</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-shopping" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-shopping" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-shopping" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-dining">Dining / Movies / Sports</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-dining" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-dining" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-dining" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-care">Personal Care - Saloon, Spa, Gym</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-care" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-care" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-care" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-travel">Travel & Annual Vacations</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-travel" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-travel" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-travel" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-coach">Fitness Coach / Financial Advisor / CA</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-coach" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-coach" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-coach" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-hobbies">Hobbies / Club Memberships</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-hobbies" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-hobbies" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-hobbies" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-courses">Professional courses / education</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-courses" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-courses" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-courses" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-charity">Charity / Donations</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-charity" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-charity" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-charity" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ls-other">Others if any</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ls-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ls-other" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-ls-other" value="annual">A</label></span></div></div>
+
+    <div class="ie-section-title">Dependent Expenses</div>
+    <div class="ie-row"><label for="ie-dep-school">Children's Schooling / College / Tuitions</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-dep-school" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-dep-school" value="monthly">M</label><label><input type="radio" name="freq-ie-dep-school" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="ie-dep-parents">Contribution to Parents</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-dep-parents" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-dep-parents" value="monthly">M</label><label><input type="radio" name="freq-ie-dep-parents" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="ie-dep-other">Others - Siblings, Relatives if any</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-dep-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-dep-other" value="monthly">M</label><label><input type="radio" name="freq-ie-dep-other" value="annual" checked>A</label></span></div></div>
+
+    <div class="ie-section-title">Insurance Premiums</div>
+    <div class="ie-row"><label for="ie-ins-life">Life Insurance (Term / Pure)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ins-life" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ins-life" value="monthly">M</label><label><input type="radio" name="freq-ie-ins-life" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ins-health">Health Insurance (Mediclaim, PA, CI)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ins-health" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ins-health" value="monthly">M</label><label><input type="radio" name="freq-ie-ins-health" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="ie-ins-general">General Insurance (Motor & Others)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-ins-general" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-ins-general" value="monthly">M</label><label><input type="radio" name="freq-ie-ins-general" value="annual" checked>A</label></span></div></div>
+
+    <div class="ie-section-title">Loan EMIs</div>
+    <div class="ie-row"><label for="ie-loan-home">Home Loan EMIs</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-loan-home" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-loan-home" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-loan-home" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-loan-vehicle">Vehicle Loan EMIs</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-loan-vehicle" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-loan-vehicle" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-loan-vehicle" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="ie-loan-other">Other Loan EMIs</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-loan-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-ie-loan-other" value="monthly" checked>M</label><label><input type="radio" name="freq-ie-loan-other" value="annual">A</label></span></div></div>
+
+    <div class="ie-section-title">Existing Investments</div>
+    <p style="font-size:11.5px; color:var(--ink-soft); margin:-4px 0 12px;">Enter what you already hold in each category and the annual return you expect from it. These are grown to your retirement age at their own return rate and offset against the retirement corpus you need.</p>
+    <div class="ie-row"><label for="ie-inv-mf">Mutual Funds (Total corpus hold til now)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inv-mf" placeholder="0"><span class="ie-prefix">@</span><input type="number" id="ie-inv-mf-ret" class="ie-inv-ret" value="12" step="0.1"><span class="ie-prefix">%</span></div></div>
+    <div class="ie-row"><label for="ie-inv-fd">Fixed Deposit</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inv-fd" placeholder="0"><span class="ie-prefix">@</span><input type="number" id="ie-inv-fd-ret" class="ie-inv-ret" value="7" step="0.1"><span class="ie-prefix">%</span></div></div>
+    <div class="ie-row"><label for="ie-inv-bonds">Bonds</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inv-bonds" placeholder="0"><span class="ie-prefix">@</span><input type="number" id="ie-inv-bonds-ret" class="ie-inv-ret" value="7.5" step="0.1"><span class="ie-prefix">%</span></div></div>
+    <div class="ie-row"><label for="ie-inv-other">Others</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="ie-inv-other" placeholder="0"><span class="ie-prefix">@</span><input type="number" id="ie-inv-other-ret" class="ie-inv-ret" value="8" step="0.1"><span class="ie-prefix">%</span></div></div>
+
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="cta-btn" style="border:none; cursor:pointer;" onclick="calcIncomeExpenditure()">Calculate</button>
+      <button class="cta-btn" style="border:1.5px solid var(--ink); cursor:pointer; background:transparent; color:var(--ink); box-shadow:none;" onclick="resetIE()">Reset</button>
+    </div>
+
+    <div id="ie-results" style="display:none;">
+      <div class="stamp-row">
+        <div class="stamp"><div class="label">Annual Income</div><div class="amount" id="ie-totalIncome">—</div></div>
+        <div class="stamp"><div class="label">Annual Expenditure</div><div class="amount" id="ie-totalExpense">—</div></div>
+        <div class="stamp highlight"><div class="label">Annual Savings</div><div class="amount" id="ie-totalSavings">—</div></div>
+      </div>
+      <div class="ie-pct-row"><span>Expenditure as % of Income</span><b id="ie-expPct">—</b></div>
+      <div class="ie-pct-row"><span>"Wants" spending as % of Income</span><b id="ie-wantsPct">—</b></div>
+      <div class="ie-warning" id="ie-savingsWarning" style="display:none;">—</div>
+      <div class="ie-warning" id="ie-wantsWarning" style="display:none;">—</div>
+
+      <div class="ie-proj-title">Household + Lifestyle Expenses vs. 10% Inflation</div>
+      <p class="ie-proj-note">Today's combined monthly household &amp; lifestyle spend: <b id="ie-currentHL">—</b></p>
+      <table class="ie-proj-table">
+        <thead><tr><th>Horizon</th><th>Projected Monthly Expense</th></tr></thead>
+        <tbody>
+          <tr><td>10 years</td><td id="ie-hl10-fv">—</td></tr>
+          <tr><td>20 years</td><td id="ie-hl20-fv">—</td></tr>
+        </tbody>
+      </table>
+      <p class="ie-proj-note">Assumes 10% annual inflation on expenses.</p>
+
+      <div class="ie-proj-title" style="margin-top:22px;">Existing Investments</div>
+      <table class="ie-proj-table">
+        <thead><tr><th>Financial Products</th><th>Total Amount Invested</th><th>Expected Annual Return</th><th id="ie-inv-fv60-header">Returns Till Retirement</th></tr></thead>
+        <tbody>
+          <tr><td>Mutual Funds (Total corpus hold til now)</td><td id="ie-inv-mf-amt">—</td><td id="ie-inv-mf-pct">—</td><td id="ie-inv-mf-fv60">—</td></tr>
+          <tr><td>Fixed Deposit</td><td id="ie-inv-fd-amt">—</td><td id="ie-inv-fd-pct">—</td><td id="ie-inv-fd-fv60">—</td></tr>
+          <tr><td>Bonds</td><td id="ie-inv-bonds-amt">—</td><td id="ie-inv-bonds-pct">—</td><td id="ie-inv-bonds-fv60">—</td></tr>
+          <tr><td>Others</td><td id="ie-inv-other-amt">—</td><td id="ie-inv-other-pct">—</td><td id="ie-inv-other-fv60">—</td></tr>
+          <tr class="ie-proj-total-row"><td>Total Amount Invested</td><td id="ie-inv-total-amt">—</td><td></td><td id="ie-inv-total-fv60">—</td></tr>
+        </tbody>
+      </table>
+      <p class="ie-proj-note" id="ie-inv-fv60-note">Enter your age and retirement age above to calculate what these investments will grow to by retirement.</p>
+
+      <div class="ie-proj-title" style="margin-top:22px;" id="ie-ret-title">Retirement Planning — Age 60 to 80</div>
+      <p class="ie-proj-note" id="ie-retirement-note">Enter your age above to see this projection.</p>
+      <div id="ie-retirement-rows" style="display:none;">
+        <table class="ie-proj-table">
+          <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td id="ie-ret-expense60-label">Projected Monthly Expense at Age 60</td><td id="ie-ret-expense60">—</td></tr>
+            <tr><td id="ie-ret-corpus60-label">Total Corpus Required at Age 60 (funds age 60–80)</td><td id="ie-ret-corpus60">—</td></tr>
+            <tr><td id="ie-ret-existingfv-label">Projected Value of Existing Investments at Age 60</td><td id="ie-ret-existingfv">—</td></tr>
+            <tr class="ie-proj-total-row"><td>Additional Corpus Still Required</td><td id="ie-ret-shortfall">—</td></tr>
+          </tbody>
+        </table>
+        <table class="ie-proj-table" id="ie-ret-funding-rows" style="margin-top:14px;">
+          <thead><tr><th>Funding Option</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Lumpsum Needed Today to Reach This</td><td id="ie-ret-lumpsum">—</td></tr>
+            <tr><td id="ie-ret-sip-label">OR Monthly SIP Needed Till Age 60</td><td id="ie-ret-sip">—</td></tr>
+          </tbody>
+        </table>
+        <p class="ie-proj-note" id="ie-ret-surplus-note" style="display:none;">—</p>
+        <p class="ie-proj-note" id="ie-ret-assumptions-note">Assumes 10% inflation, a 12% expected annual return on fresh investments made until age 60, and a more conservative 8% expected annual return on the retirement corpus while it is drawn down from age 60 to 80. Existing investments are grown to age 60 at the annual return entered for each.</p>
+      </div>
+
+      <button class="cta-btn" style="margin-top:18px; border:none; cursor:pointer; display:block; width:100%; text-align:center;" onclick="ieDownloadPDF()">Download as PDF</button>
+
+      <div class="wa-cta-box">
+        <p class="wa-cta-title">Ready to invest? Tap a button below to WhatsApp us directly:</p>
+        <div class="wa-cta-buttons">
+          <a class="wa-btn wa-btn-sip" href="https://wa.me/919363535359?text=SIP" target="_blank" rel="noopener">SIP</a>
+          <a class="wa-btn wa-btn-lumpsum" href="https://wa.me/919363535359?text=Lumpsum" target="_blank" rel="noopener">Lumpsum</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SHOPKEEPER / BUSINESS BUDGET PANEL -->
+  <div class="card panel" id="panel-shopbudget">
+
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 16px;">Enter each figure, then mark it as <b>M</b>onthly or <b>A</b>nnual — mix and match as needed. This helps you see exactly how much your shop or business holds back at the end of the month, and what you could start investing.</p>
+
+    <div class="ie-section-title first">Business Income</div>
+    <div class="ie-row"><label for="sb-inc-sales">Sales / Turnover Revenue</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-inc-sales" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-inc-sales" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-inc-sales" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-inc-other">Other Business Income</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-inc-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-inc-other" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-inc-other" value="annual">A</label></span></div></div>
+
+    <div class="ie-section-title">Business Needs</div>
+    <div class="ie-row"><label for="sb-need-inventory">Inventory / Stock Purchase</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-inventory" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-inventory" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-inventory" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-rent">Shop Rent</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-rent" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-rent" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-rent" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-salaries">Staff Salaries & Wages</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-salaries" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-salaries" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-salaries" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-electricity">Electricity & Utilities</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-electricity" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-electricity" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-electricity" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-logistics">Logistics & Transport</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-logistics" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-logistics" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-logistics" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-statutory">Statutory Payments (GST, Tax, Licenses)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-statutory" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-statutory" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-statutory" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-repairs">Essential Repairs & Maintenance</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-repairs" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-repairs" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-repairs" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-need-other">Others if any</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-need-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-need-other" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-need-other" value="annual">A</label></span></div></div>
+
+    <div class="ie-section-title">Business Wants</div>
+    <div class="ie-row"><label for="sb-want-renovation">Shop Renovation</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-want-renovation" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-want-renovation" value="monthly">M</label><label><input type="radio" name="freq-sb-want-renovation" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="sb-want-equipment">New Equipment / Machinery</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-want-equipment" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-want-equipment" value="monthly">M</label><label><input type="radio" name="freq-sb-want-equipment" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="sb-want-branding">Branding & Marketing</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-want-branding" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-want-branding" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-want-branding" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-want-software">Premium Software / Subscriptions</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-want-software" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-want-software" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-want-software" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-want-expansion">Expansion-related Discretionary Expenses</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-want-expansion" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-want-expansion" value="monthly">M</label><label><input type="radio" name="freq-sb-want-expansion" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="sb-want-other">Others if any</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-want-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-want-other" value="monthly">M</label><label><input type="radio" name="freq-sb-want-other" value="annual" checked>A</label></span></div></div>
+
+    <div class="ie-section-title">Business Reserves / Investments</div>
+    <div class="ie-row"><label for="sb-res-emergency">Emergency Reserve Fund</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-res-emergency" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-res-emergency" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-res-emergency" value="annual">A</label></span></div></div>
+    <div class="ie-row"><label for="sb-res-fd">Fixed Deposit (FD)</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-res-fd" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-res-fd" value="monthly">M</label><label><input type="radio" name="freq-sb-res-fd" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="sb-res-business">Business Investment</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-res-business" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-res-business" value="monthly">M</label><label><input type="radio" name="freq-sb-res-business" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="sb-res-expansion">Expansion Fund</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-res-expansion" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-res-expansion" value="monthly">M</label><label><input type="radio" name="freq-sb-res-expansion" value="annual" checked>A</label></span></div></div>
+    <div class="ie-row"><label for="sb-res-other">Others if any</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-res-other" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-res-other" value="monthly">M</label><label><input type="radio" name="freq-sb-res-other" value="annual" checked>A</label></span></div></div>
+
+    <div class="ie-section-title">Balance Held</div>
+    <div class="ie-row"><label for="sb-bal-held">Cash/Bank Balance Retained for Upcoming Requirements</label><div class="ie-input-wrap"><span class="ie-prefix">Rs.</span><input type="number" id="sb-bal-held" placeholder="0"><span class="ie-freq-mini"><label><input type="radio" name="freq-sb-bal-held" value="monthly" checked>M</label><label><input type="radio" name="freq-sb-bal-held" value="annual">A</label></span></div></div>
+
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="cta-btn" style="border:none; cursor:pointer;" onclick="calcShopBudget()">Calculate</button>
+      <button class="cta-btn" style="border:1.5px solid var(--ink); cursor:pointer; background:transparent; color:var(--ink); box-shadow:none;" onclick="resetSB()">Reset</button>
+    </div>
+
+    <div id="sb-results" style="display:none;">
+      <div class="stamp-row">
+        <div class="stamp"><div class="label">Annual Business Income</div><div class="amount" id="sb-totalIncome">—</div></div>
+        <div class="stamp"><div class="label">Annual Business Outgo</div><div class="amount" id="sb-totalExpense">—</div></div>
+        <div class="stamp highlight"><div class="label">Annual Balance Held Back</div><div class="amount" id="sb-totalSavings">—</div></div>
+      </div>
+      <div class="ie-pct-row"><span>Outgo as % of Income</span><b id="sb-expPct">—</b></div>
+      <div class="ie-pct-row"><span>"Wants" spending as % of Income</span><b id="sb-wantsPct">—</b></div>
+      <div class="goal-result" id="sb-sipLine">—</div>
+      <div class="goal-result" id="sb-sip30Line" style="margin-top:8px;">—</div>
+      <div class="ie-warning" id="sb-savingsWarning" style="display:none;">—</div>
+      <div class="ie-warning" id="sb-wantsWarning" style="display:none;">—</div>
+
+      <div class="ie-proj-title">Business Needs + Wants vs. 6% Inflation</div>
+      <p class="ie-proj-note">Today's combined monthly needs &amp; wants spend: <b id="sb-currentNW">—</b></p>
+      <table class="ie-proj-table">
+        <thead><tr><th>Horizon</th><th>Projected Annual Expense</th><th>Monthly SIP to Beat It</th></tr></thead>
+        <tbody>
+          <tr><td>10 years</td><td id="sb-nw10-fv">—</td><td id="sb-nw10-sip">—</td></tr>
+          <tr><td>20 years</td><td id="sb-nw20-fv">—</td><td id="sb-nw20-sip">—</td></tr>
+          <tr><td>30 years</td><td id="sb-nw30-fv">—</td><td id="sb-nw30-sip">—</td></tr>
+        </tbody>
+      </table>
+      <p class="ie-proj-note">Assumes 6% annual inflation on expenses and a 12% expected annual return on the SIP.</p>
+
+      <button class="cta-btn" style="margin-top:18px; border:none; cursor:pointer; display:block; width:100%; text-align:center;" onclick="sbDownloadPDF()">Download as PDF</button>
+      <a class="cta-btn" href="https://tinyurl.com/f473xtsz" target="_blank" rel="noopener" style="margin-top:10px; display:block; width:100%; text-align:center; text-decoration:none; background:#000;">Click here to start your business SIP</a>
+    </div>
+
+  </div>
+
+  <div style="margin:8px 0 0 10px;">
+    <a class="cta-btn" href="https://zfrmz.in/QYgqK0DchN7Mme3pyIda" target="_blank" rel="noopener">Like what you see? Book a call with me →</a>
+  </div>
+
+  <footer>
+    Figures are illustrative projections at a constant assumed rate of return — actual mutual fund returns are market-linked and will vary. This is not investment advice; speak with your advisor before investing.
+    <br><span style="opacity:0.7;">v1.9</span>
+  </footer>
+</div>
+
+<script>
+const WA_SIP_QR = 'data:image/png;base64,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';
+const WA_LUMPSUM_QR = 'data:image/png;base64,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';
+function fmtINR(n){
+  n = Math.round(n);
+  if(!isFinite(n)) return '—';
+  let sign = n<0 ? '-' : '';
+  n = Math.abs(n);
+  let s = n.toString();
+  let last3 = s.substring(s.length-3);
+  let rest = s.substring(0,s.length-3);
+  if(rest!=='') last3 = ','+last3;
+  let formatted = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + last3;
+  return sign+'₹'+formatted;
+}
+
+function numberToWordsIndian(num){
+  num = Math.round(Math.abs(num || 0));
+  if(num === 0) return 'Zero Rupees';
+  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+
+  function twoDigits(n){
+    if(n < 20) return ones[n];
+    return tens[Math.floor(n/10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+  }
+  function threeDigits(n){
+    let s = '';
+    if(n >= 100){
+      s += ones[Math.floor(n/100)] + ' Hundred';
+      n = n % 100;
+      if(n) s += ' ';
+    }
+    if(n) s += twoDigits(n);
+    return s;
+  }
+
+  const crore = Math.floor(num / 10000000); num %= 10000000;
+  const lakh = Math.floor(num / 100000); num %= 100000;
+  const thousand = Math.floor(num / 1000); num %= 1000;
+  const hundred = num;
+
+  let parts = [];
+  if(crore) parts.push(threeDigits(crore) + ' Crore');
+  if(lakh) parts.push(threeDigits(lakh) + ' Lakh');
+  if(thousand) parts.push(threeDigits(thousand) + ' Thousand');
+  if(hundred) parts.push(threeDigits(hundred));
+
+  return parts.join(' ') + ' Rupees';
+}
+
+function drawWhatsAppButton(doc, x, y, w, h, label, fillColor, url){
+  doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
+  doc.setDrawColor(19, 40, 69);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(label, x + w / 2, y + h / 2 + 1.5, { align: 'center' });
+  doc.link(x, y, w, h, { url: url });
+  doc.setTextColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+}
+
+function drawWhatsAppQR(doc, x, y, w, base64Img, caption){
+  const qrSize = Math.min(w, 34);
+  const qrX = x + (w - qrSize) / 2;
+  doc.addImage(base64Img, 'PNG', qrX, y, qrSize, qrSize);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(19, 40, 69);
+  doc.text(caption, x + w / 2, y + qrSize + 5, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  return qrSize + 10;
+}
+
+function annualizedIEValue(id){
+  const raw = parseFloat(document.getElementById(id).value) || 0;
+  const freqEl = document.querySelector('input[name="freq-' + id + '"]:checked');
+  const freq = freqEl ? freqEl.value : 'monthly';
+  return freq === 'monthly' ? raw * 12 : raw;
+}
+
+function ieInvestmentFV(amountId, retId, years){
+  const amount = parseFloat(document.getElementById(amountId).value) || 0;
+  const retInput = document.getElementById(retId);
+  let retPct = parseFloat(retInput.value);
+  if(isNaN(retPct)){
+    retPct = parseFloat(retInput.placeholder) || 0;
+  }
+  return amount * Math.pow(1 + retPct / 100, years);
+}
+
+function calcIncomeExpenditure(){
+  const incomeIds = ['ie-inc-salary','ie-inc-bonus','ie-inc-business','ie-inc-rental','ie-inc-investment'];
+  const householdIds = ['ie-hh-rent','ie-hh-maint','ie-hh-food','ie-hh-vehicle','ie-hh-medical','ie-hh-utilities','ie-hh-help','ie-hh-comm','ie-hh-subs','ie-hh-other'];
+  const lifestyleIds = ['ie-ls-clothes','ie-ls-shopping','ie-ls-dining','ie-ls-care','ie-ls-travel','ie-ls-coach','ie-ls-hobbies','ie-ls-courses','ie-ls-charity','ie-ls-other'];
+  const wantsIds = ['ie-hh-help','ie-hh-subs','ie-ls-clothes','ie-ls-shopping','ie-ls-dining','ie-ls-care','ie-ls-travel','ie-ls-coach','ie-ls-hobbies','ie-ls-charity','ie-ls-other'];
+  const otherExpenseIds = [
+    'ie-dep-school','ie-dep-parents','ie-dep-other',
+    'ie-ins-life','ie-ins-health','ie-ins-general',
+    'ie-loan-home','ie-loan-vehicle','ie-loan-other'
+  ];
+  const expenseIds = householdIds.concat(lifestyleIds, otherExpenseIds);
+  const sumAnnualized = ids => ids.reduce((s,id) => s + annualizedIEValue(id), 0);
+
+  const annualIncome = sumAnnualized(incomeIds);
+  const annualExpense = sumAnnualized(expenseIds);
+
+  if(annualIncome <= 0){
+    alert('Please enter at least your income.');
+    return;
+  }
+
+  const annualSavings = annualIncome - annualExpense;
+  const expPct = (annualExpense / annualIncome) * 100;
+  document.getElementById('ie-totalIncome').textContent = fmtINR(annualIncome);
+  document.getElementById('ie-totalExpense').textContent = fmtINR(annualExpense);
+  document.getElementById('ie-totalSavings').textContent = fmtINR(annualSavings);
+  document.getElementById('ie-expPct').textContent = expPct.toFixed(1) + '%';
+
+  // ---- Savings rate check ----
+  const savingsPct = (annualSavings / annualIncome) * 100;
+  const savingsWarningEl = document.getElementById('ie-savingsWarning');
+  if(savingsPct < 20){
+    savingsWarningEl.innerHTML = '<b>Warning:</b> Your savings rate is only <b>' + savingsPct.toFixed(1) + '% of your income</b> — below the commonly recommended 20% floor. Look for ways to increase savings so more can be put to work towards your goals.';
+    savingsWarningEl.style.display = 'block';
+  } else {
+    savingsWarningEl.style.display = 'none';
+  }
+
+  // ---- Needs vs. Wants ----
+  const annualWants = sumAnnualized(wantsIds);
+  const wantsPct = (annualWants / annualIncome) * 100;
+  document.getElementById('ie-wantsPct').textContent = wantsPct.toFixed(1) + '%';
+
+  const warningEl = document.getElementById('ie-wantsWarning');
+  if(wantsPct > 30){
+    warningEl.innerHTML = '<b>Warning:</b> Your "wants" spending is <b>' + wantsPct.toFixed(1) + '% of your income</b> — above the commonly recommended 30% ceiling. Trimming discretionary spend here could meaningfully boost how much you can invest each month.';
+    warningEl.style.display = 'block';
+  } else {
+    warningEl.style.display = 'none';
+  }
+
+  // ---- Household + Lifestyle expense projection vs 6% inflation ----
+  const annualHL = sumAnnualized(householdIds) + sumAnnualized(lifestyleIds);
+  const monthlyHL = annualHL / 12;
+  document.getElementById('ie-currentHL').textContent = fmtINR(monthlyHL) + ' /mo';
+
+  const inflationRate = 0.10;
+
+  [10, 20].forEach(function(yrs){
+    const futureMonthlyExpense = monthlyHL * Math.pow(1 + inflationRate, yrs);
+    document.getElementById('ie-hl' + yrs + '-fv').textContent = fmtINR(futureMonthlyExpense) + ' /mo';
+  });
+
+  // ---- Age & Retirement Age (needed for both Existing Investments and Retirement Planning) ----
+  const nameVal = (document.getElementById('ie-user-name').value || '').trim();
+  const ageVal = parseFloat(document.getElementById('ie-user-age').value);
+  const retAgeInput = parseFloat(document.getElementById('ie-user-retage').value);
+  const retAgeVal = (retAgeInput && retAgeInput > 0) ? retAgeInput : 60;
+  const yearsToRetireForInv = (ageVal && ageVal > 0 && ageVal < retAgeVal) ? (retAgeVal - ageVal) : null;
+
+  document.getElementById('ie-inv-fv60-header').textContent = 'Returns Till Age ' + retAgeVal;
+  document.getElementById('ie-ret-title').textContent = 'Retirement Planning — Age ' + retAgeVal + ' to 80';
+  document.getElementById('ie-ret-expense60-label').textContent = 'Projected Monthly Expense at Age ' + retAgeVal;
+  document.getElementById('ie-ret-corpus60-label').textContent = 'Total Corpus Required at Age ' + retAgeVal + ' (funds age ' + retAgeVal + '\u201380)';
+  document.getElementById('ie-ret-existingfv-label').textContent = 'Projected Value of Existing Investments at Age ' + retAgeVal;
+  document.getElementById('ie-ret-sip-label').textContent = 'OR Monthly SIP Needed Till Age ' + retAgeVal;
+  document.getElementById('ie-ret-assumptions-note').textContent = 'Assumes 10% inflation, a 12% expected annual return on fresh investments made until age ' + retAgeVal + ', and a more conservative 8% expected annual return on the retirement corpus while it is drawn down from age ' + retAgeVal + ' to 80. Existing investments are grown to age ' + retAgeVal + ' at the annual return entered for each.';
+
+  // ---- Existing Investments summary table ----
+  function invReturnPct(retId){
+    const el = document.getElementById(retId);
+    const v = parseFloat(el.value);
+    return (isNaN(v) ? (parseFloat(el.placeholder) || 0) : v) + '%';
+  }
+  const invMfAmt = parseFloat(document.getElementById('ie-inv-mf').value) || 0;
+  const invFdAmt = parseFloat(document.getElementById('ie-inv-fd').value) || 0;
+  const invBondsAmt = parseFloat(document.getElementById('ie-inv-bonds').value) || 0;
+  const invOtherAmt = parseFloat(document.getElementById('ie-inv-other').value) || 0;
+  document.getElementById('ie-inv-mf-amt').textContent = fmtINR(invMfAmt);
+  document.getElementById('ie-inv-mf-pct').textContent = invReturnPct('ie-inv-mf-ret');
+  document.getElementById('ie-inv-fd-amt').textContent = fmtINR(invFdAmt);
+  document.getElementById('ie-inv-fd-pct').textContent = invReturnPct('ie-inv-fd-ret');
+  document.getElementById('ie-inv-bonds-amt').textContent = fmtINR(invBondsAmt);
+  document.getElementById('ie-inv-bonds-pct').textContent = invReturnPct('ie-inv-bonds-ret');
+  document.getElementById('ie-inv-other-amt').textContent = fmtINR(invOtherAmt);
+  document.getElementById('ie-inv-other-pct').textContent = invReturnPct('ie-inv-other-ret');
+  document.getElementById('ie-inv-total-amt').textContent = fmtINR(invMfAmt + invFdAmt + invBondsAmt + invOtherAmt);
+
+  const fv60NoteEl = document.getElementById('ie-inv-fv60-note');
+  if(yearsToRetireForInv === null){
+    document.getElementById('ie-inv-mf-fv60').textContent = '—';
+    document.getElementById('ie-inv-fd-fv60').textContent = '—';
+    document.getElementById('ie-inv-bonds-fv60').textContent = '—';
+    document.getElementById('ie-inv-other-fv60').textContent = '—';
+    document.getElementById('ie-inv-total-fv60').textContent = '—';
+    fv60NoteEl.textContent = 'Enter your age and retirement age above to calculate what these investments will grow to by retirement.';
+    fv60NoteEl.style.display = 'block';
+  } else {
+    const mfFv60 = ieInvestmentFV('ie-inv-mf', 'ie-inv-mf-ret', yearsToRetireForInv);
+    const fdFv60 = ieInvestmentFV('ie-inv-fd', 'ie-inv-fd-ret', yearsToRetireForInv);
+    const bondsFv60 = ieInvestmentFV('ie-inv-bonds', 'ie-inv-bonds-ret', yearsToRetireForInv);
+    const otherFv60 = ieInvestmentFV('ie-inv-other', 'ie-inv-other-ret', yearsToRetireForInv);
+    document.getElementById('ie-inv-mf-fv60').textContent = fmtINR(mfFv60);
+    document.getElementById('ie-inv-fd-fv60').textContent = fmtINR(fdFv60);
+    document.getElementById('ie-inv-bonds-fv60').textContent = fmtINR(bondsFv60);
+    document.getElementById('ie-inv-other-fv60').textContent = fmtINR(otherFv60);
+    document.getElementById('ie-inv-total-fv60').textContent = fmtINR(mfFv60 + fdFv60 + bondsFv60 + otherFv60);
+    fv60NoteEl.style.display = 'none';
+  }
+
+  // ---- Retirement Planning: corpus & funding needed for retirement age to 80 ----
+  const retirementNoteEl = document.getElementById('ie-retirement-note');
+  const retirementRowsEl = document.getElementById('ie-retirement-rows');
+
+  if(!ageVal || ageVal <= 0){
+    retirementNoteEl.textContent = 'Enter your age above to see this projection.';
+    retirementNoteEl.style.display = 'block';
+    retirementRowsEl.style.display = 'none';
+  } else if(ageVal >= retAgeVal){
+    retirementNoteEl.textContent = 'This projection applies to ages below your retirement age.';
+    retirementNoteEl.style.display = 'block';
+    retirementRowsEl.style.display = 'none';
+  } else {
+    const yearsToRetire = retAgeVal - ageVal;
+    const retirementYears = Math.max(80 - retAgeVal, 0); // retirement age to 80
+    const preReturn = 0.12;
+    const postReturn = 0.08;
+
+    // Monthly household + lifestyle expense projected forward to retirement age
+    const monthlyExpenseAt60 = monthlyHL * Math.pow(1 + inflationRate, yearsToRetire);
+
+    // Present value at retirement age of a monthly expense stream from retirement age to 80,
+    // growing with inflation and discounted at the post-retirement return (annuity-due).
+    const gM = Math.pow(1 + inflationRate, 1/12) - 1;
+    const rM = Math.pow(1 + postReturn, 1/12) - 1;
+    const nMonths = retirementYears * 12;
+    let corpusAt60;
+    if(nMonths <= 0){
+      corpusAt60 = 0;
+    } else if(Math.abs(rM - gM) < 1e-9){
+      corpusAt60 = monthlyExpenseAt60 * nMonths * (1 + rM);
+    } else {
+      corpusAt60 = monthlyExpenseAt60 * (1 - Math.pow((1 + gM) / (1 + rM), nMonths)) / (rM - gM) * (1 + rM);
+    }
+
+    // Lumpsum today that would grow to this corpus by retirement age
+    const preMonthlyRate = Math.pow(1 + preReturn, 1/12) - 1;
+    const accumMonths = yearsToRetire * 12;
+    const accumAnnuityFactor = (Math.pow(1 + preMonthlyRate, accumMonths) - 1) / preMonthlyRate * (1 + preMonthlyRate);
+
+    // Existing investments (Mutual Funds, FD, Bonds, Others), each grown at its own
+    // annual return to retirement age, offset against the corpus required.
+    const existingInvestmentsFV =
+      ieInvestmentFV('ie-inv-mf', 'ie-inv-mf-ret', yearsToRetire) +
+      ieInvestmentFV('ie-inv-fd', 'ie-inv-fd-ret', yearsToRetire) +
+      ieInvestmentFV('ie-inv-bonds', 'ie-inv-bonds-ret', yearsToRetire) +
+      ieInvestmentFV('ie-inv-other', 'ie-inv-other-ret', yearsToRetire);
+
+    const shortfall = Math.max(corpusAt60 - existingInvestmentsFV, 0);
+    const surplus = Math.max(existingInvestmentsFV - corpusAt60, 0);
+
+    document.getElementById('ie-ret-expense60').textContent = fmtINR(monthlyExpenseAt60) + ' /mo';
+    document.getElementById('ie-ret-expense60').dataset.raw = monthlyExpenseAt60;
+    document.getElementById('ie-ret-corpus60').textContent = fmtINR(corpusAt60);
+    document.getElementById('ie-ret-corpus60').dataset.raw = corpusAt60;
+    document.getElementById('ie-ret-existingfv').textContent = fmtINR(existingInvestmentsFV);
+    document.getElementById('ie-ret-existingfv').dataset.raw = existingInvestmentsFV;
+    document.getElementById('ie-ret-shortfall').textContent = fmtINR(shortfall);
+    document.getElementById('ie-ret-shortfall').dataset.raw = shortfall;
+
+    const fundingRowsEl = document.getElementById('ie-ret-funding-rows');
+    const surplusNoteEl = document.getElementById('ie-ret-surplus-note');
+
+    if(shortfall <= 0){
+      fundingRowsEl.style.display = 'none';
+      surplusNoteEl.innerHTML = 'Your existing investments are projected to already cover this goal, with a projected surplus of <b>' + fmtINR(surplus) + '</b> at age ' + retAgeVal + '. No further investment is required to meet this goal.';
+      surplusNoteEl.style.display = 'block';
+    } else {
+      // Lumpsum today, and monthly SIP till age 60, needed to cover only the shortfall
+      const lumpsumToday = shortfall / Math.pow(1 + preReturn, yearsToRetire);
+      const sipNeededForRetirement = shortfall / accumAnnuityFactor;
+
+      document.getElementById('ie-ret-lumpsum').textContent = fmtINR(lumpsumToday);
+      document.getElementById('ie-ret-lumpsum').dataset.raw = lumpsumToday;
+      document.getElementById('ie-ret-sip').textContent = fmtINR(sipNeededForRetirement) + ' /mo';
+      document.getElementById('ie-ret-sip').dataset.raw = sipNeededForRetirement;
+
+      fundingRowsEl.style.display = 'table';
+      surplusNoteEl.style.display = 'none';
+    }
+
+    retirementNoteEl.style.display = 'none';
+    retirementRowsEl.style.display = 'block';
+  }
+
+  document.getElementById('ie-results').style.display = 'block';
+}
+
+function resetIE(){
+  document.getElementById('ie-user-name').value = '';
+  document.getElementById('ie-user-age').value = '';
+  document.getElementById('ie-user-retage').value = '60';
+  document.getElementById('ie-retirement-note').textContent = 'Enter your age above to see this projection.';
+  document.getElementById('ie-retirement-note').style.display = 'block';
+  document.getElementById('ie-retirement-rows').style.display = 'none';
+  document.getElementById('ie-ret-funding-rows').style.display = 'table';
+  document.getElementById('ie-ret-surplus-note').style.display = 'none';
+  document.getElementById('ie-inv-fv60-header').textContent = 'Returns Till Age 60';
+  document.getElementById('ie-inv-fv60-note').textContent = 'Enter your age and retirement age above to calculate what these investments will grow to by retirement.';
+  document.getElementById('ie-ret-title').textContent = 'Retirement Planning — Age 60 to 80';
+  document.getElementById('ie-ret-expense60-label').textContent = 'Projected Monthly Expense at Age 60';
+  document.getElementById('ie-ret-corpus60-label').textContent = 'Total Corpus Required at Age 60 (funds age 60–80)';
+  document.getElementById('ie-ret-existingfv-label').textContent = 'Projected Value of Existing Investments at Age 60';
+  document.getElementById('ie-ret-sip-label').textContent = 'OR Monthly SIP Needed Till Age 60';
+  document.getElementById('ie-ret-assumptions-note').textContent = 'Assumes 10% inflation, a 12% expected annual return on fresh investments made until age 60, and a more conservative 8% expected annual return on the retirement corpus while it is drawn down from age 60 to 80. Existing investments are grown to age 60 at the annual return entered for each.';
+  document.getElementById('ie-inv-fv60-note').style.display = 'block';
+
+  const investmentAmountIds = ['ie-inv-mf','ie-inv-fd','ie-inv-bonds','ie-inv-other'];
+  investmentAmountIds.forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ie-inv-mf-ret').value = '12';
+  document.getElementById('ie-inv-fd-ret').value = '7';
+  document.getElementById('ie-inv-bonds-ret').value = '7.5';
+  document.getElementById('ie-inv-other-ret').value = '8';
+
+  ['ie-inv-mf-amt','ie-inv-mf-pct','ie-inv-mf-fv60','ie-inv-fd-amt','ie-inv-fd-pct','ie-inv-fd-fv60','ie-inv-bonds-amt','ie-inv-bonds-pct','ie-inv-bonds-fv60','ie-inv-other-amt','ie-inv-other-pct','ie-inv-other-fv60','ie-inv-total-amt','ie-inv-total-fv60'].forEach(function(id){
+    document.getElementById(id).textContent = '—';
+  });
+
+  const allIds = [
+    'ie-inc-salary','ie-inc-bonus','ie-inc-business','ie-inc-rental','ie-inc-investment',
+    'ie-hh-rent','ie-hh-maint','ie-hh-food','ie-hh-vehicle','ie-hh-medical','ie-hh-utilities','ie-hh-help','ie-hh-comm','ie-hh-subs','ie-hh-other',
+    'ie-ls-clothes','ie-ls-shopping','ie-ls-dining','ie-ls-care','ie-ls-travel','ie-ls-coach','ie-ls-hobbies','ie-ls-courses','ie-ls-charity','ie-ls-other',
+    'ie-dep-school','ie-dep-parents','ie-dep-other',
+    'ie-ins-life','ie-ins-health','ie-ins-general',
+    'ie-loan-home','ie-loan-vehicle','ie-loan-other'
+  ];
+  const defaultAnnual = ['ie-dep-school','ie-dep-parents','ie-dep-other','ie-ins-life','ie-ins-health','ie-ins-general'];
+
+  allIds.forEach(function(id){
+    document.getElementById(id).value = '';
+    const monthlyRadio = document.querySelector('input[name="freq-' + id + '"][value="monthly"]');
+    const annualRadio = document.querySelector('input[name="freq-' + id + '"][value="annual"]');
+    if(defaultAnnual.indexOf(id) !== -1){
+      annualRadio.checked = true;
+    } else {
+      monthlyRadio.checked = true;
+    }
+  });
+
+  document.getElementById('ie-results').style.display = 'none';
+  document.getElementById('ie-wantsWarning').style.display = 'none';
+  document.getElementById('ie-savingsWarning').style.display = 'none';
+}
+
+function ieDownloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 22;
+
+  function toRs(s){
+    return String(s)
+      .replace(/₹/g, 'Rs. ')
+      .replace(/—/g, '-')
+      .replace(/⚠/g, '');
+  }
+
+  const ieNameVal = (document.getElementById('ie-user-name').value || '').trim();
+  const ieAgeVal = parseFloat(document.getElementById('ie-user-age').value);
+  const ieRetAgeVal = parseFloat(document.getElementById('ie-user-retage').value) || 60;
+  const ieReportTitle = ieNameVal ? ieNameVal + "'s Family Monthly Budget" : 'Your Family Monthly Budget';
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(17);
+  doc.text(ieReportTitle, 14, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor(90, 90, 90);
+  doc.text('Prepared by Venkatakrishnan Krishnaswamy, QPFP\u00AE', 14, y);
+  y += 6;
+  if(ieAgeVal){
+    doc.text('Age: ' + ieAgeVal + ' years  |  Retirement Age: ' + ieRetAgeVal + ' years', 14, y);
+    y += 6;
+  }
+  doc.setTextColor(0, 0, 0);
+  y += 4;
+  doc.setDrawColor(217, 212, 195);
+  doc.line(14, y, 196, y);
+  y += 10;
+
+  doc.setFontSize(11);
+  doc.autoTable({
+    startY: y,
+    head: [['Particulars', 'Value']],
+    body: [
+      ['Annual Income', toRs(document.getElementById('ie-totalIncome').textContent)],
+      ['Annual Expenditure', toRs(document.getElementById('ie-totalExpense').textContent)],
+      ['Annual Savings', toRs(document.getElementById('ie-totalSavings').textContent)],
+      ['Expenditure as % of Income', document.getElementById('ie-expPct').textContent],
+      ['"Wants" spending as % of Income', document.getElementById('ie-wantsPct').textContent]
+    ],
+    theme: 'grid',
+    headStyles: { fillColor: [19, 40, 69], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+    bodyStyles: { fontSize: 10.5, textColor: [19, 40, 69] },
+    columnStyles: { 0: { cellWidth: 105 }, 1: { cellWidth: 75, fontStyle: 'bold' } },
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: [217, 212, 195], lineWidth: 0.3, cellPadding: 5 }
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+
+  const savingsWarningEl = document.getElementById('ie-savingsWarning');
+  if(savingsWarningEl.style.display !== 'none'){
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(122, 35, 35);
+    doc.setFontSize(10);
+    const savWarnText = toRs(savingsWarningEl.textContent);
+    const savWarnLines = doc.splitTextToSize(savWarnText, 182);
+    doc.text(savWarnLines, 14, y);
+    y += savWarnLines.length * 5.5 + 10;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+  }
+
+  const warningEl = document.getElementById('ie-wantsWarning');
+  if(warningEl.style.display !== 'none'){
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(122, 35, 35);
+    doc.setFontSize(10);
+    const warnText = toRs(warningEl.textContent);
+    const warnLines = doc.splitTextToSize(warnText, 182);
+    doc.text(warnLines, 14, y);
+    y += warnLines.length * 5.5 + 10;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+  }
+
+  if(y > 250){
+    doc.addPage();
+    y = 20;
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Household + Lifestyle Expenses vs. 10% Inflation', 14, y);
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.text('Combined monthly spend today: ' + toRs(document.getElementById('ie-currentHL').textContent), 14, y);
+  y += 6;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Horizon', 'Projected Monthly Expense']],
+    body: [
+      ['10 years', toRs(document.getElementById('ie-hl10-fv').textContent)],
+      ['20 years', toRs(document.getElementById('ie-hl20-fv').textContent)]
+    ],
+    theme: 'grid',
+    headStyles: { fillColor: [19, 40, 69], textColor: 255, fontStyle: 'bold', fontSize: 10 },
+    bodyStyles: { fontSize: 9.5, textColor: [19, 40, 69] },
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: [217, 212, 195], lineWidth: 0.3, cellPadding: 4 }
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  if(y > 250){
+    doc.addPage();
+    y = 20;
+  }
+
+  const invMf = parseFloat(document.getElementById('ie-inv-mf').value) || 0;
+  const invMfRet = document.getElementById('ie-inv-mf-ret').value || '0';
+  const invFd = parseFloat(document.getElementById('ie-inv-fd').value) || 0;
+  const invFdRet = document.getElementById('ie-inv-fd-ret').value || '0';
+  const invBonds = parseFloat(document.getElementById('ie-inv-bonds').value) || 0;
+  const invBondsRet = document.getElementById('ie-inv-bonds-ret').value || '0';
+  const invOther = parseFloat(document.getElementById('ie-inv-other').value) || 0;
+  const invOtherRet = document.getElementById('ie-inv-other-ret').value || '0';
+  const invTotal = invMf + invFd + invBonds + invOther;
+
+  const invFv60ColHeader = document.getElementById('ie-inv-fv60-header').textContent || 'Returns Till Retirement';
+  const invMfFv60 = toRs(document.getElementById('ie-inv-mf-fv60').textContent);
+  const invFdFv60 = toRs(document.getElementById('ie-inv-fd-fv60').textContent);
+  const invBondsFv60 = toRs(document.getElementById('ie-inv-bonds-fv60').textContent);
+  const invOtherFv60 = toRs(document.getElementById('ie-inv-other-fv60').textContent);
+  const invTotalFv60 = toRs(document.getElementById('ie-inv-total-fv60').textContent);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Existing Investments', 14, y);
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+
+  doc.autoTable({
+    startY: y,
+    head: [['Category', 'Total Amount (Rs.)', 'Expected Annual Return', invFv60ColHeader]],
+    body: [
+      ['Mutual Funds (Total corpus hold til now)', toRs(fmtINR(invMf)), invMfRet + '%', invMfFv60],
+      ['Fixed Deposit', toRs(fmtINR(invFd)), invFdRet + '%', invFdFv60],
+      ['Bonds', toRs(fmtINR(invBonds)), invBondsRet + '%', invBondsFv60],
+      ['Others', toRs(fmtINR(invOther)), invOtherRet + '%', invOtherFv60]
+    ],
+    foot: [['Total Amount', toRs(fmtINR(invTotal)), '', invTotalFv60]],
+    theme: 'grid',
+    headStyles: { fillColor: [19, 40, 69], textColor: 255, fontStyle: 'bold', fontSize: 9.5 },
+    bodyStyles: { fontSize: 9, textColor: [19, 40, 69] },
+    footStyles: { fillColor: [221, 187, 122], textColor: [19, 40, 69], fontStyle: 'bold', fontSize: 9.5 },
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: [217, 212, 195], lineWidth: 0.3, cellPadding: 4 }
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  if(y > 250){
+    doc.addPage();
+    y = 20;
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text(document.getElementById('ie-ret-title').textContent, 14, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+
+  const retirementRowsVisible = document.getElementById('ie-retirement-rows').style.display !== 'none';
+  if(!retirementRowsVisible){
+    const retNoteText = toRs(document.getElementById('ie-retirement-note').textContent);
+    const retNoteLines = doc.splitTextToSize(retNoteText, 182);
+    doc.text(retNoteLines, 14, y);
+    y += retNoteLines.length * 5.5 + 10;
+  } else {
+    function retValWithWords(elId){
+      const el = document.getElementById(elId);
+      const formatted = toRs(el.textContent);
+      const raw = parseFloat(el.dataset.raw);
+      if(isNaN(raw)) return formatted;
+      return formatted + '\n(' + numberToWordsIndian(raw) + ')';
+    }
+
+    const fundingRowsVisible = document.getElementById('ie-ret-funding-rows').style.display !== 'none';
+    const retBodyRows = [
+      [document.getElementById('ie-ret-expense60-label').textContent, retValWithWords('ie-ret-expense60')],
+      [document.getElementById('ie-ret-corpus60-label').textContent, retValWithWords('ie-ret-corpus60')],
+      [document.getElementById('ie-ret-existingfv-label').textContent, retValWithWords('ie-ret-existingfv')],
+      ['Additional Corpus Still Required', retValWithWords('ie-ret-shortfall')]
+    ];
+    if(fundingRowsVisible){
+      retBodyRows.push(['Lumpsum Needed Today to Reach This', retValWithWords('ie-ret-lumpsum')]);
+      retBodyRows.push([document.getElementById('ie-ret-sip-label').textContent, retValWithWords('ie-ret-sip')]);
+    }
+
+    doc.autoTable({
+      startY: y,
+      head: [['Particulars', 'Value']],
+      body: retBodyRows,
+      theme: 'grid',
+      headStyles: { fillColor: [19, 40, 69], textColor: 255, fontStyle: 'bold', fontSize: 10 },
+      bodyStyles: { fontSize: 9, textColor: [19, 40, 69] },
+      columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 80, fontStyle: 'bold' } },
+      margin: { left: 14, right: 14 },
+      styles: { lineColor: [217, 212, 195], lineWidth: 0.3, cellPadding: 4 }
+    });
+    y = doc.lastAutoTable.finalY + 6;
+
+    if(!fundingRowsVisible){
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(31, 95, 77);
+      const surplusText = toRs(document.getElementById('ie-ret-surplus-note').textContent);
+      const surplusLines = doc.splitTextToSize(surplusText, 182);
+      doc.text(surplusLines, 14, y);
+      y += surplusLines.length * 5 + 8;
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+    }
+
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(120, 120, 120);
+    const retAssumptionText = toRs(document.getElementById('ie-ret-assumptions-note').textContent);
+    const retAssumptionLines = doc.splitTextToSize(retAssumptionText, 182);
+    doc.text(retAssumptionLines, 14, y);
+    y += retAssumptionLines.length * 4.5 + 10;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+  }
+
+  const disclaimer = 'This is for illustration purpose only. Actual returns may vary. Mutual fund investments are subject to market risks. Please read scheme documents carefully. Returns are not guaranteed.';
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(120, 120, 120);
+  const disclaimerLines = doc.splitTextToSize(disclaimer, 182);
+  const disclaimerHeight = disclaimerLines.length * 4.5;
+  if(y + disclaimerHeight > 285){
+    doc.addPage();
+    y = 20;
+  }
+  doc.text(disclaimerLines, 14, y);
+  y += disclaimerHeight + 10;
+  doc.setTextColor(0, 0, 0);
+
+  // ---- WhatsApp CTA + QR codes: always on their own page, centered ----
+  doc.addPage();
+  y = 40;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(19, 40, 69);
+  doc.text('Ready to invest?', 105, y, { align: 'center' });
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  doc.text('Tap a button below, or scan a QR code, to WhatsApp us directly:', 105, y, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  y += 16;
+
+  const waNumber = '919363535359';
+  const btnGap = 10;
+  const btnWidth = (182 - btnGap) / 2;
+  const btnHeight = 16;
+  drawWhatsAppButton(doc, 14, y, btnWidth, btnHeight, 'SIP', [31, 95, 77], 'https://wa.me/' + waNumber + '?text=SIP');
+  drawWhatsAppButton(doc, 14 + btnWidth + btnGap, y, btnWidth, btnHeight, 'Lumpsum', [181, 66, 63], 'https://wa.me/' + waNumber + '?text=Lumpsum');
+  y += btnHeight + 26;
+
+  drawWhatsAppQR(doc, 14, y, btnWidth, WA_LUMPSUM_QR, 'Scan to start SIP');
+  drawWhatsAppQR(doc, 14 + btnWidth + btnGap, y, btnWidth, WA_SIP_QR, 'Scan to start Lumpsum');
+  y += 34 + 10;
+
+  const fileSafeName = ieNameVal ? ieNameVal.replace(/[^a-z0-9]+/gi, '_') : 'Family';
+  doc.save(fileSafeName + '_Monthly_Budget_Report.pdf');
+}
+
+// ---------- SHOPKEEPER / BUSINESS BUDGET ----------
+function sbAnnualizedValue(id){
+  const raw = parseFloat(document.getElementById(id).value) || 0;
+  const freqEl = document.querySelector('input[name="freq-' + id + '"]:checked');
+  const freq = freqEl ? freqEl.value : 'monthly';
+  return freq === 'monthly' ? raw * 12 : raw;
+}
+
+function calcShopBudget(){
+  const incomeIds = ['sb-inc-sales','sb-inc-other'];
+  const needsIds = ['sb-need-inventory','sb-need-rent','sb-need-salaries','sb-need-electricity','sb-need-logistics','sb-need-statutory','sb-need-repairs','sb-need-other'];
+  const wantsIds = ['sb-want-renovation','sb-want-equipment','sb-want-branding','sb-want-software','sb-want-expansion','sb-want-other'];
+  const reserveIds = ['sb-res-emergency','sb-res-fd','sb-res-business','sb-res-expansion','sb-res-other'];
+  const balanceIds = ['sb-bal-held'];
+  const expenseIds = needsIds.concat(wantsIds, reserveIds, balanceIds);
+  const sumAnnualized = ids => ids.reduce((s,id) => s + sbAnnualizedValue(id), 0);
+
+  const annualIncome = sumAnnualized(incomeIds);
+  const annualExpense = sumAnnualized(expenseIds);
+
+  if(annualIncome <= 0){
+    alert('Please enter at least your business income.');
+    return;
+  }
+
+  const annualSavings = annualIncome - annualExpense;
+  const expPct = (annualExpense / annualIncome) * 100;
+  const monthlyInvestible = Math.max(annualSavings / 12, 0);
+
+  document.getElementById('sb-totalIncome').textContent = fmtINR(annualIncome);
+  document.getElementById('sb-totalExpense').textContent = fmtINR(annualExpense);
+  document.getElementById('sb-totalSavings').textContent = fmtINR(annualSavings);
+  document.getElementById('sb-expPct').textContent = expPct.toFixed(1) + '%';
+  document.getElementById('sb-sipLine').innerHTML = 'What your business holds back — <b>' + fmtINR(annualSavings) + '</b> a year — translates into a monthly SIP of <b>' + fmtINR(monthlyInvestible) + '</b> towards building wealth outside the business.';
+
+  const totalSip30 = monthlyInvestible * 12 * 30;
+  document.getElementById('sb-sip30Line').innerHTML = 'Kept up consistently, this SIP adds up to a total investment of <b>' + fmtINR(totalSip30) + '</b> over the next 30 years (before any growth).';
+
+  // ---- Savings rate check ----
+  const savingsPct = (annualSavings / annualIncome) * 100;
+  const savingsWarningEl = document.getElementById('sb-savingsWarning');
+  if(savingsPct < 20){
+    savingsWarningEl.innerHTML = '<b>Warning:</b> Your business is holding back only <b>' + savingsPct.toFixed(1) + '% of income</b> — below the commonly recommended 20% floor. Look for ways to free up more so it can be put to work.';
+    savingsWarningEl.style.display = 'block';
+  } else {
+    savingsWarningEl.style.display = 'none';
+  }
+
+  // ---- Needs vs. Wants ----
+  const annualWants = sumAnnualized(wantsIds);
+  const wantsPct = (annualWants / annualIncome) * 100;
+  document.getElementById('sb-wantsPct').textContent = wantsPct.toFixed(1) + '%';
+
+  const warningEl = document.getElementById('sb-wantsWarning');
+  if(wantsPct > 20){
+    warningEl.innerHTML = '<b>Warning:</b> "Wants" spending is <b>' + wantsPct.toFixed(1) + '% of income</b> — above the commonly recommended 20% ceiling for discretionary business spend. Trimming this could meaningfully boost how much you can invest each month.';
+    warningEl.style.display = 'block';
+  } else {
+    warningEl.style.display = 'none';
+  }
+
+  // ---- Needs + Wants expense projection vs 6% inflation ----
+  const annualNW = sumAnnualized(needsIds) + sumAnnualized(wantsIds);
+  const monthlyNW = annualNW / 12;
+  document.getElementById('sb-currentNW').textContent = fmtINR(monthlyNW) + ' /mo';
+
+  const inflationRate = 0.06;
+  const expectedReturn = 0.12;
+  const monthlyRate = Math.pow(1 + expectedReturn, 1/12) - 1;
+
+  [10, 20, 30].forEach(function(yrs){
+    const futureAnnualExpense = annualNW * Math.pow(1 + inflationRate, yrs);
+    const months = yrs * 12;
+    const annuityFactor = (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate * (1 + monthlyRate);
+    const sipNeeded = futureAnnualExpense / annuityFactor;
+    document.getElementById('sb-nw' + yrs + '-fv').textContent = fmtINR(futureAnnualExpense);
+    document.getElementById('sb-nw' + yrs + '-sip').textContent = fmtINR(sipNeeded) + ' /mo';
+  });
+
+  document.getElementById('sb-results').style.display = 'block';
+}
+
+function resetSB(){
+  const allIds = [
+    'sb-inc-sales','sb-inc-other',
+    'sb-need-inventory','sb-need-rent','sb-need-salaries','sb-need-electricity','sb-need-logistics','sb-need-statutory','sb-need-repairs','sb-need-other',
+    'sb-want-renovation','sb-want-equipment','sb-want-branding','sb-want-software','sb-want-expansion','sb-want-other',
+    'sb-res-emergency','sb-res-fd','sb-res-business','sb-res-expansion','sb-res-other',
+    'sb-bal-held'
+  ];
+  const defaultAnnual = ['sb-want-renovation','sb-want-equipment','sb-want-expansion','sb-want-other','sb-res-fd','sb-res-business','sb-res-expansion','sb-res-other'];
+
+  allIds.forEach(function(id){
+    document.getElementById(id).value = '';
+    const monthlyRadio = document.querySelector('input[name="freq-' + id + '"][value="monthly"]');
+    const annualRadio = document.querySelector('input[name="freq-' + id + '"][value="annual"]');
+    if(defaultAnnual.indexOf(id) !== -1){
+      annualRadio.checked = true;
+    } else {
+      monthlyRadio.checked = true;
+    }
+  });
+
+  document.getElementById('sb-results').style.display = 'none';
+  document.getElementById('sb-wantsWarning').style.display = 'none';
+  document.getElementById('sb-savingsWarning').style.display = 'none';
+}
+
+function sbDownloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 22;
+
+  function toRs(s){
+    return String(s)
+      .replace(/₹/g, 'Rs. ')
+      .replace(/—/g, '-')
+      .replace(/⚠/g, '');
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(17);
+  doc.text("VJ Wealth's Business Budget", 14, y);
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor(90, 90, 90);
+  doc.text('Prepared by Venkatakrishnan Krishnaswamy, QPFP\u00AE', 14, y);
+  doc.setTextColor(0, 0, 0);
+  y += 10;
+  doc.setDrawColor(217, 212, 195);
+  doc.line(14, y, 196, y);
+  y += 10;
+
+  doc.setFontSize(11);
+  doc.autoTable({
+    startY: y,
+    head: [['Particulars', 'Value']],
+    body: [
+      ['Annual Business Income', toRs(document.getElementById('sb-totalIncome').textContent)],
+      ['Annual Business Outgo', toRs(document.getElementById('sb-totalExpense').textContent)],
+      ['Annual Balance Held Back', toRs(document.getElementById('sb-totalSavings').textContent)],
+      ['Outgo as % of Income', document.getElementById('sb-expPct').textContent],
+      ['"Wants" spending as % of Income', document.getElementById('sb-wantsPct').textContent]
+    ],
+    theme: 'grid',
+    headStyles: { fillColor: [19, 40, 69], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+    bodyStyles: { fontSize: 10.5, textColor: [19, 40, 69] },
+    columnStyles: { 0: { cellWidth: 105 }, 1: { cellWidth: 75, fontStyle: 'bold' } },
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: [217, 212, 195], lineWidth: 0.3, cellPadding: 5 }
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  const sipText = toRs(document.getElementById('sb-sipLine').textContent);
+  const sipLines = doc.splitTextToSize(sipText, 182);
+  doc.text(sipLines, 14, y);
+  y += sipLines.length * 6 + 6;
+
+  const sip30Text = toRs(document.getElementById('sb-sip30Line').textContent);
+  const sip30Lines = doc.splitTextToSize(sip30Text, 182);
+  doc.text(sip30Lines, 14, y);
+  y += sip30Lines.length * 6 + 10;
+
+  const savingsWarningEl = document.getElementById('sb-savingsWarning');
+  if(savingsWarningEl.style.display !== 'none'){
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(122, 35, 35);
+    doc.setFontSize(10);
+    const savWarnText = toRs(savingsWarningEl.textContent);
+    const savWarnLines = doc.splitTextToSize(savWarnText, 182);
+    doc.text(savWarnLines, 14, y);
+    y += savWarnLines.length * 5.5 + 10;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+  }
+
+  const warningEl = document.getElementById('sb-wantsWarning');
+  if(warningEl.style.display !== 'none'){
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(122, 35, 35);
+    doc.setFontSize(10);
+    const warnText = toRs(warningEl.textContent);
+    const warnLines = doc.splitTextToSize(warnText, 182);
+    doc.text(warnLines, 14, y);
+    y += warnLines.length * 5.5 + 10;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+  }
+
+  if(y > 250){
+    doc.addPage();
+    y = 20;
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Business Needs + Wants vs. 6% Inflation', 14, y);
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.text('Combined monthly spend today: ' + toRs(document.getElementById('sb-currentNW').textContent), 14, y);
+  y += 6;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Horizon', 'Projected Annual Expense', 'Monthly SIP to Beat It']],
+    body: [
+      ['10 years', toRs(document.getElementById('sb-nw10-fv').textContent), toRs(document.getElementById('sb-nw10-sip').textContent)],
+      ['20 years', toRs(document.getElementById('sb-nw20-fv').textContent), toRs(document.getElementById('sb-nw20-sip').textContent)],
+      ['30 years', toRs(document.getElementById('sb-nw30-fv').textContent), toRs(document.getElementById('sb-nw30-sip').textContent)]
+    ],
+    theme: 'grid',
+    headStyles: { fillColor: [19, 40, 69], textColor: 255, fontStyle: 'bold', fontSize: 10 },
+    bodyStyles: { fontSize: 9.5, textColor: [19, 40, 69] },
+    margin: { left: 14, right: 14 },
+    styles: { lineColor: [217, 212, 195], lineWidth: 0.3, cellPadding: 4 }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  const disclaimer = 'This is for illustration purpose only. Actual returns may vary. Mutual fund investments are subject to market risks. Please read scheme documents carefully. Returns are not guaranteed.';
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(120, 120, 120);
+  const disclaimerLines = doc.splitTextToSize(disclaimer, 182);
+  const disclaimerHeight = disclaimerLines.length * 4.5;
+  if(y + disclaimerHeight > 285){
+    doc.addPage();
+    y = 20;
+  }
+  doc.text(disclaimerLines, 14, y);
+  y += disclaimerHeight + 10;
+  doc.setTextColor(0, 0, 0);
+
+  // ---- WhatsApp CTA + QR codes: always on their own page, centered ----
+  doc.addPage();
+  y = 40;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(19, 40, 69);
+  doc.text('Ready to invest?', 105, y, { align: 'center' });
+  y += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  doc.text('Tap a button below, or scan a QR code, to WhatsApp us directly:', 105, y, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  y += 16;
+
+  const waNumber = '919363535359';
+  const btnGap = 10;
+  const btnWidth = (182 - btnGap) / 2;
+  const btnHeight = 16;
+  drawWhatsAppButton(doc, 14, y, btnWidth, btnHeight, 'SIP', [31, 95, 77], 'https://wa.me/' + waNumber + '?text=SIP');
+  drawWhatsAppButton(doc, 14 + btnWidth + btnGap, y, btnWidth, btnHeight, 'Lumpsum', [181, 66, 63], 'https://wa.me/' + waNumber + '?text=Lumpsum');
+  y += btnHeight + 26;
+
+  drawWhatsAppQR(doc, 14, y, btnWidth, WA_LUMPSUM_QR, 'Scan to start SIP');
+  drawWhatsAppQR(doc, 14 + btnWidth + btnGap, y, btnWidth, WA_SIP_QR, 'Scan to start Lumpsum');
+  y += 34 + 10;
+
+  doc.save('Business_Budget_Report.pdf');
+}
+
+// ---------- TABS ----------
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>
