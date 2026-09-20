@@ -661,6 +661,9 @@
   #gc-retResults{margin-bottom:18px;}
   /* on-screen figures are still calculated, but only the PDF shows them */
   .out{display:none !important;}
+  .gc-two{display:grid; grid-template-columns:1fr 1fr; gap:0 14px;}
+  @media(max-width:560px){ .gc-two{grid-template-columns:1fr;} }
+  .cta-btn.alt{background:var(--paper); color:var(--ink);}
   .ready-box{margin-top:18px;}
   .ready-box .ie-ready{margin-top:0;}
   #gc-ready.ie-ready{margin:4px 0 18px;}
@@ -678,7 +681,7 @@
     <h1>VJ Wealth's Ledger</h1>
     <p class="prepared-by-main">by Venkatakrishnan Krishnaswamy, QPFP&reg;</p>
     <p>Work out what a SIP, a lumpsum, or a savings goal actually adds up to — before you commit a rupee.</p>
-    <a class="cta-btn" href="https://zfrmz.in/QYgqK0DchN7Mme3pyIda" target="_blank" rel="noopener">Book a call with me →</a>
+    <a class="cta-btn" href="https://calendly.com/vjwealthmfd/30min" target="_blank" rel="noopener">Book a call with me →</a>
   </header>
 
   <div class="tabs">
@@ -731,6 +734,7 @@
     <div class="ready-box" id="sip-ready" style="display:none;">
       <div class="ie-ready"><span class="ie-ready-tick">&#10003;</span><div><div class="ie-ready-title">Your personalised report is ready</div><p>We've worked out your numbers. Download the full report as a PDF to see the complete breakdown.</p></div></div>
       <button class="cta-btn" style="margin-top:14px; border:none; cursor:pointer; display:block; width:100%; text-align:center;" onclick="sipDownloadPDF()">Download as PDF</button>
+      <a class="cta-btn alt" href="https://calendly.com/vjwealthmfd/30min" target="_blank" rel="noopener" style="display:block; width:100%; text-align:center; margin-top:10px;">Book a call with me &rarr;</a>
     </div>
   </div>
 
@@ -773,6 +777,7 @@
     <div class="ready-box" id="ls-ready" style="display:none;">
       <div class="ie-ready"><span class="ie-ready-tick">&#10003;</span><div><div class="ie-ready-title">Your personalised report is ready</div><p>We've worked out your numbers. Download the full report as a PDF to see the complete breakdown.</p></div></div>
       <button class="cta-btn" style="margin-top:14px; border:none; cursor:pointer; display:block; width:100%; text-align:center;" onclick="lsDownloadPDF()">Download as PDF</button>
+      <a class="cta-btn alt" href="https://calendly.com/vjwealthmfd/30min" target="_blank" rel="noopener" style="display:block; width:100%; text-align:center; margin-top:10px;">Book a call with me &rarr;</a>
     </div>
   </div>
 
@@ -796,9 +801,15 @@
           <label for="gc-name">Full name</label>
           <input type="text" id="gc-name" placeholder="e.g. Arun Kumar" />
         </div>
-        <div class="field">
-          <label for="gc-mobile">Mobile number</label>
-          <input type="tel" id="gc-mobile" inputmode="numeric" maxlength="16" placeholder="10-digit mobile number" autocomplete="tel-national" />
+        <div class="gc-two">
+          <div class="field">
+            <label for="gc-mobile">Mobile number</label>
+            <input type="tel" id="gc-mobile" inputmode="numeric" maxlength="16" placeholder="10-digit mobile no." autocomplete="tel-national" />
+          </div>
+          <div class="field">
+            <label for="gc-email">Email ID</label>
+            <input type="email" id="gc-email" inputmode="email" autocomplete="email" placeholder="you@example.com" />
+          </div>
         </div>
         <button class="btn" onclick="gcStep1Next()">Next — choose a goal</button>
       </div>
@@ -1051,7 +1062,7 @@
         </div>
 
         <button class="btn" onclick="gcDownloadPDF()">Download as PDF</button>
-        <a class="btn outline" href="https://zfrmz.in/QYgqK0DchN7Mme3pyIda" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; margin-top:10px;">Click to connect</a>
+        <a class="btn outline" href="https://calendly.com/vjwealthmfd/30min" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; margin-top:10px;">Book a call with me &rarr;</a>
         <button class="btn ghost" onclick="gcGoToStep(2)" style="margin-top:10px;">Change my inputs</button>
       </div>
 
@@ -1109,11 +1120,12 @@
       <div class="ready-box"><div class="ie-ready"><span class="ie-ready-tick">&#10003;</span><div><div class="ie-ready-title">Your personalised report is ready</div><p>We've worked out your numbers. Download the full report as a PDF to see the complete breakdown.</p></div></div></div>
 
       <button class="cta-btn" style="margin-top:16px; border:none; cursor:pointer; display:block; width:100%; text-align:center;" onclick="swpDownloadPDF()">Download as PDF</button>
+      <a class="cta-btn alt" href="https://calendly.com/vjwealthmfd/30min" target="_blank" rel="noopener" style="display:block; width:100%; text-align:center; margin-top:10px;">Book a call with me &rarr;</a>
     </div>
   </div>
 
   <div style="margin:8px 0 0 10px;">
-    <a class="cta-btn" href="https://zfrmz.in/QYgqK0DchN7Mme3pyIda" target="_blank" rel="noopener">Like what you see? Book a call with me →</a>
+    <a class="cta-btn" href="https://calendly.com/vjwealthmfd/30min" target="_blank" rel="noopener">Like what you see? Book a call with me →</a>
   </div>
 
   <footer>
@@ -1974,13 +1986,13 @@ function ieDownloadPDF(){
 
   // ---- page 1: budget ----
   PDFX.start(ctx, title);
-  PDFX.grid(ctx, 'Particulars', [
+  PDFX.grid(ctx, 'Particulars', gcWithContact([
     ['Age', r.hasAge ? fmtPlain(r.age) + ' years' : '-',  'Annual Income', M(r.annualIncome)],
     ['Retirement Age', fmtPlain(r.retAge) + ' years',     'Annual Expenditure', M(r.annualExpense)],
     ['Life Expectancy', fmtPlain(r.life) + ' years',      'Annual Savings', M(r.annualSavings)],
     ['Expenditure as % of Income', r.expPct.toFixed(1) + '%', '\u201CWants\u201D spending as % of Income', r.wantsPct.toFixed(1) + '%'],
     ['Pre-Retirement Inflation Rate Assumed', fmtPlain(r.preInf) + '%', 'Post-Retirement Inflation Rate Assumed', fmtPlain(r.postInf) + '%']
-  ]);
+  ], 0));
   PDFX.table(ctx, {
     title:'Household + Lifestyle Expenses vs. ' + fmtPlain(r.preInf) + '% Pre-Retirement Inflation',
     cols:[
@@ -2137,22 +2149,42 @@ function swpDownloadPDF(){
 
 // ---------- MOBILE NUMBER (goal calculator, step 1) + Calculate buttons for SIP / Lumpsum ----------
 let gcMobile = '';
+let gcEmail = '';
 function gcCleanMobile(raw){
   let d = String(raw || '').replace(/\D/g, '');
   if(d.length === 12 && d.indexOf('91') === 0) d = d.slice(2);
   else if(d.length === 11 && d.charAt(0) === '0') d = d.slice(1);
   return /^[6-9]\d{9}$/.test(d) ? d : '';
 }
+function gcCleanEmail(raw){
+  const e = String(raw || '').trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) ? e : '';
+}
 function gcStep1Next(){
-  const el = document.getElementById('gc-mobile');
-  const m = gcCleanMobile(el.value);
+  const mEl = document.getElementById('gc-mobile');
+  const m = gcCleanMobile(mEl.value);
   if(!m){
     alert('Please enter a valid 10-digit mobile number.');
-    el.focus();
+    mEl.focus();
+    return;
+  }
+  const eEl = document.getElementById('gc-email');
+  const e = gcCleanEmail(eEl.value);
+  if(!e){
+    alert('Please enter a valid email ID.');
+    eEl.focus();
     return;
   }
   gcMobile = m;
+  gcEmail = e;
   gcGoToStep(2);
+}
+// client contact row for the PDF particulars grid (mobile + email captured on step 1)
+function gcWithContact(rows, pos){
+  if(!gcMobile && !gcEmail) return rows;
+  const out = rows.slice();
+  out.splice(pos, 0, [ 'Mobile No', gcMobile ? gcMobile.slice(0, 5) + ' ' + gcMobile.slice(5) : '-', 'Email Id', gcEmail || '-' ]);
+  return out;
 }
 function sipCalculate(){ calcSIP(); document.getElementById('sip-ready').style.display = 'block'; }
 function lsCalculate(){ calcLumpsum(); document.getElementById('ls-ready').style.display = 'block'; }
@@ -2200,11 +2232,11 @@ function gcDownloadPDF(){
   PDFX.start(ctx, title);
 
   if(r.type === 'education'){
-    PDFX.grid(ctx, 'Particulars', [
+    PDFX.grid(ctx, 'Particulars', gcWithContact([
       [ 'Client Name', r.name, 'Goal', goalName ],
       [ 'Years to age 18', r.years, 'Present Value of College Education', M(r.pvNum) ],
       [ 'Assumed inflation', '10.0% p.a.', 'Assumed return on investment', '12.0% p.a.' ]
-    ]);
+    ], 1));
     PDFX.table(ctx, {
       title:'Funding Required',
       cols:[
@@ -2220,11 +2252,11 @@ function gcDownloadPDF(){
     });
     PDFX.notes(ctx, 'Assumes 10% annual inflation on the cost of education and a 12% expected annual return on investments until the child turns 18.');
   } else if(r.type === 'wealth'){
-    PDFX.grid(ctx, 'Particulars', [
+    PDFX.grid(ctx, 'Particulars', gcWithContact([
       [ 'Client Name', r.name, 'Goal', goalName ],
       [ 'Goal Amount', M(r.amtNum), 'Years to Achieve', r.yearsLabel ],
       [ 'Assumed return on investment', GC_WEALTH_RETURN.toFixed(1) + '% p.a.', null, null ]
-    ]);
+    ], 1));
     const wNote = 'Assumes a ' + GC_WEALTH_RETURN + '% expected annual return over the chosen period. The SIP is invested every month and compounds monthly at the equivalent rate. The goal amount is treated as the value you want at the end of the period, with no inflation adjustment.';
     PDFX.table(ctx, {
       title:'Funding Required',
@@ -2242,9 +2274,9 @@ function gcDownloadPDF(){
     });
     PDFX.notes(ctx, wNote);
   } else {
-    PDFX.grid(ctx, 'Particulars', [
+    PDFX.grid(ctx, 'Particulars', gcWithContact([
       [ 'Client Name', r.name, 'Goal', goalName ]
-    ]);
+    ], 1));
     PDFX.para(ctx, r.note, { id:'dvc', size:8.5, lineH:12 });
     PDFX.notes(ctx, '');
   }
